@@ -1,0 +1,1197 @@
+---
+title: "Final INSH"
+author: "Sanjan Gorlla"
+date: "Dec/12/22"
+output:
+  pdf_document: 
+     latex_engine: xelatex
+  html_document:
+    df_print: paged
+header-includes:
+   - \usepackage{dcolumn}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Final Exam
+
+```{r}
+# loading required libraries
+library(readr) # to read data
+library(dplyr) # to tidy data
+library(GGally) # to make correlation matrix
+library(lmtest) # for Breusch-Pagan/heteroscedasticity test
+library(car) # for multicollinearity test
+library(corrplot) # for correlation
+library(ggplot2) # plots
+library(skimr) # for skim() function
+library(knitr) # for kable() function
+library(psych) # for pairs.plot()
+library(reshape) # for melt()
+library(scales) # for percent() 
+library(leaps) # To check all possible regression
+```
+
+
+###### Problem 1: You roll five six-sided dice. Write a script in R to calculate the probability of getting between 15 and 20 (inclusive) as the total amount of your roll (ie, the sum when you add up what is showing on all five dice). Exact solutions are preferable but approximate solutions are ok as long as they are precise (10pts)
+
+
+```{r}
+## Defining the function which does calculation
+side_dice <- function(n){
+  dice <- expand.grid(1:n, 1:n, 1:n, 1:n, 1:n) # five 'n' sided dice
+  # the probability of getting between 15 and 20 (inclusive)
+  # as the total amount of your roll (ie, the sum when you add up what is showing on all five dice)
+  return (mean(15 <= rowSums(dice) & rowSums(dice) <=20))
+}
+
+## Implementation of  the function
+# Therefore the probability of getting between 
+# 15 and 20 (inclusive) as the total amount of your roll 
+# (ie, the sum when you add up what is showing on all five dice) is 0.5570988
+side_dice(6)
+# "The probability of getting between 15 and 20 (inclusive)
+# as the total amount of five six-sided dice is:56%
+```
+
+
+
+
+
+##### Problem 2: Create a simulated dataset of 100 observations, where x is a random normal variable with mean 0 and standard deviation 1, and 𝑦 = 0.1 + 2 ∗ 𝑥 + 𝜖, where epsilon is also a random normal error with mean 0 and sd 1. (10pts)
+
+```{r}
+set.seed(1)
+# create some simulated data
+# x is a random normal variable
+x <- rnorm(n = 100, mean = 0, sd = 1) 
+# epsilon is also a random normal error with mean 0 and sd 1
+e <- rnorm(n = 100, mean = 0, sd = 1) 
+# The final equation
+y <- 0.1 + 2 * x + e # vectorize
+```
+
+
+##### Problem 2a: Perform a t test for whether the mean of Y equals the mean of X using R.
+$$ H0: µ1 = µ2 (The\,Y\,and\,X\,means\,are\,equal)$$
+$$H1: µ1 ≠ µ2 (The\,Y\,and\,X\,means\,are\,not\,equal)$$
+The null hypothesis (H0) states that there is no significant difference between the means of the two groups.
+The alternative hypothesis (H1) states that there is a significant difference between the two population means, and that this difference is unlikely to be caused by sampling error or chance.
+
+```{r}
+set.seed(1)
+t.test(y, x, paired  = T)
+```
+
+Here I have used a paired t-test (also known as a dependent or correlated t-test) is a statistical test that compares the averages/means and standard deviations of two related groups to determine if there is a significant difference between the two groups.
+
+since, Y value is dependent on X, paired t-test is appropriate method, as there is a relationship between X and Y
+
+The p-value is larger than significance level α = 0.05, we cannot conclude that a significant difference exists.The results showed that the probability value is greater than 0.05. Higher the P-value, Based on this result, we shall reject the alternate hypothesis of no difference. It means that there is no significant difference between the means of the two groups. Therefore, The mean differences of Y and and X is 0.1710793. i.e, there is no significant difference between the means of the Y and mean of the X
+
+
+##### Problem 2b: Now perform this test by hand using just the first 5 observations. Please write out all your steps carefully.
+
+
+To determine whether or not the mean of Y equals the mean of X, we will perform a paired samples t-test at significance level α = 0.05
+
+T-test for dependent variables is simple
+
+```{r}
+set.seed(1)
+# The first 5 observations
+x <- x[1:5]
+y <- y[1:5]
+# mean and s.d of x
+x_mean <- mean(x)
+x_mean
+x_sd <- sd(x)
+# mean and s.d of y
+y_mean <- mean(y)
+y_mean
+y_sd <- sd(y)
+# s.d of x and y
+xy_sd <- sqrt(x_sd/length(x) + y_sd/length(y))
+```
+
+
+```{r}
+### Step 1: Calculate the differences
+xy_diff <- x-y
+### mean of the difference
+xy_mean <-mean(xy_diff)
+xy_mean
+## sd of the difference
+xy_sd <- sd(xy_diff)
+xy_sd
+### sample size 
+n <- length(x)
+n
+```
+
+
+```{r}
+### Step 2: Define the hypotheses.
+# We will perform the paired samples t-test with the following hypotheses:
+# H0: μ1 = μ2 (the two population(x and y) means are equal)
+# H1: μ1 ≠ μ2 (the two population( x and y) means are not equal)
+```
+
+
+```{r}
+### Step 3: Calculate the test statistic t
+```
+
+```{r}
+# t-statistics
+t_stats <- xy_mean/xy_sd/ sqrt(n)
+t_stats
+```
+
+
+$$Test\,Statistic (dependent\,sample)= \frac{x_{diff}}{sd_{diff}/\sqrt{n}}$$
+
+$$Test\,Statistic (dependent\,sample)= \frac{0.1678758}{1.3672/\sqrt{5}} = 0.2745622$$
+
+
+
+$$ df = 5-1=4$$
+
+```{r}
+### Step 4: Calculate the p-value of the test statistic t.
+# α = 0.05
+df <- 4
+qt(0.95, 4) # Critical t value for p > 0.05
+2*pt(0.054,4,lower.tail=F) 
+# 0.959 is greater than 0.05 therefore, we accept the null hypothesis of the equal means
+```
+
+$$ Critical\,t\,value\,for\,p > 0.05$$
+
+#### Step 5: Draw a conclusion.
+#### Because the calculated t value (0.09273116) is less than our critical t value  2.13 (and our p-value is subsequently greater than 0.05), we reject the alternate hypothesis and conclude that the mean of X and Y are same.
+#### Therefore, there is no significant difference between the means of the Y and mean of the X of first five observations
+
+
+
+
+
+##### Problem 2c: Assuming the mean and sd of the sample that you calculated from the first five observations would not change, what is the minimum total number of additional observations you would need to be able to conclude that the true mean 𝜇 of the population is different from 0 at the 𝑝 = 0.01 confidence level?
+
+```{r}
+min_obv <- function(x){
+  # mean of first five obseravtions
+  sample_mean<- mean(x)
+  # sd of first five obseravtions
+  sample_sd <- sd(x)
+  # 𝑝 = 0.01 confidence level
+  given_alpha <- 0.01
+  # let's assume true mean 𝜇 of the population = 0
+  # for loop that calculates
+  # minimum total number of additional observations 
+  # you would need to be able to conclude that the true mean 𝜇 of the population is different from 0 
+  
+  for (i in 5:200000) {
+    # calculating the standard error
+    SE<-sample_sd/sqrt(i)
+    # The main condition that the true mean 𝜇 of the population is different from 0
+    CI_level<-sample_mean + c(qt(given_alpha/2,i-1), qt(1-(given_alpha/2),i-1))*SE
+    #This for loop ends with the main condition of CI is different from 0 (decrease)
+    if (CI_level[2]< 0) # When the population mean differs from zero
+    break
+  }
+  i
+}
+
+```
+
+
+```{r}
+x <-y[1:5]
+min_obv(x)
+# The minimum total number of additional observations  
+# would need to be able to conclude that the true mean 𝜇 of the population
+# is different from 0 at the 𝑝 = 0.01 confidence level is 23889
+```
+
+
+
+```{r}
+set.seed(1)
+# create some simulated data
+# x is a random normal variable
+x <- rnorm(n = 23894, mean = 0, sd = 1) 
+# epsilon is also a random normal error with mean 0 and sd 1
+e <- rnorm(n = 23894, mean = 0, sd = 1) 
+# The final equation
+y <- 0.1 + 2 * x + e # vectorize
+```
+
+
+
+```{r}
+t.test(y, mu=0, conf.level = 0.01)
+# Therefore, p-value is less than 0.05. 
+# Hence, we accept the alternative hypothesis: true mean is not equal to 0. 
+```
+
+
+#### Problem 3. Generate a new 100-observation dataset as before, except now 𝑦 = 0.1 + 0.2 ∗ 𝑥 + 𝜖 (10pts)
+
+```{r}
+set.seed(1)
+# create some simulated data
+# x is a random normal variable
+x <- rnorm(n = 100, mean = 0, sd = 1) 
+# epsilon is also a random normal error with mean 0 and sd 1
+e <- rnorm(n = 100, mean = 0, sd = 1) 
+# The final equation
+y <- 0.1 + 0.2 * x + e # vectorize
+```
+
+
+### Problem 3a. Regress y on x using R, and report the results. Discuss the coeﬀicient on x and its standard error, and present its 95% CI.
+
+```{r}
+set.seed(1)
+# Regress y on x
+y_on_x <- lm( y ~ x)
+summary(y_on_x)
+```
+
+
+### RESULTS
+Finally, our model equation can be written as follow: $$y = 0.06231 + 0.19894 * X$$
+
+```{r}
+# 95% CI
+confint(y_on_x, level=0.95)
+```
+(-0.01484117 0.4127204) conf_interval of x 
+
+Residuals : This model seems like a well-fitting  model, the residuals should be normally distributed around 0. The residuals here look roughly symmetrical. Good..
+
+##### Discuss the coeﬀicient on x and its standard error, and present its 95% CI
+##### Coefficients
+1. The coefficient Estimate contains two rows; the first one is the intercept. Therefore, it takes an average coefficient of x to be 0.19894  
+2. The coefficient Standard Error measures the average amount that the coefficient estimates vary from the actual average value of our response variable. We’d ideally want a lower number relative to its coefficients.  In this model the standard error of the estimate = 0.10773, 
+3. The t-value (which is just the estimate divided by its SE)= 1.847 The coefficient t-value is a measure of how many standard deviations our coefficient estimate is far away from 0. We want it to be far away from zero as this would indicate we could reject the null hypothesis - that is, we could declare a relationship between y and x. In our example, the t-statistic values are far away from zero and are large relative to the standard error, which could indicate a relationship exists. 
+In general, t-values are also used to compute p-values.
+4. The p-value associated with that t-value (the probability of getting a t-value more extreme than the observed t-value if the null hypothesis were true) =   0.0678 
+
+The Pr(>t) acronym found in the model output relates to the probability of observing any value equal or larger than t.A small p-value indicates that it is unlikely we will observe a relationship between the y and x  variables due to chance. Typically, a p-value of 5% or less is a good cut-off point.
+
+In our model example, the p-values is not significant. Note the ‘signif. Codes’ associated to each estimate. stars (or asterisks) represent a highly significant p-value. Finally, there is a no significance code for each coefficient using asterisks to indicate how small the p-value is. Consequently, a small p-value for the intercept and the slope indicates that we cannot reject the null hypothesis which allows us to conclude that there no significant relationship between y and x.
+
+
+## problem 3b. Use R to calculate the p-value on the coeﬀicient on x from the t statistic for that coeﬀicient as shown in the regression in 3a, and confirm that your p-value matches what is shown in 3a. What does this p-value represent (be very precise in your language here)?
+
+```{r}
+2*pt(1.847,98, lower.tail = F) # p-value on the coefficient on x 
+# Therefore the p-value 0.0677 matches the p-value that is shown in 3a on the coeﬀicient on x 
+```
+
+Coefficient - Pr(>t)
+
+Therefore, The p value matches the p value in 3a. The coefficient is not significant, we can infer. The impact of x and y is inconsequential. Therefore, we must enhance this model.
+
+
+
+
+### problem 3c. Use R to calculate the p-value associated with the F statistic reported in your regression output. What does this test and its p-value indicate?
+
+```{r}
+# Calculation of the p-value associated with F statistic
+# Taking the F statistic reported the regression model =  3.41
+#  3.41 on 1 is reported
+pf( 3.41,1,(length(x)-1-1), lower.tail = F) 
+# Therefore the calculated p-value 0.0169 
+# matches the p-value that is associated with the F statistic reported in the above regression output
+```
+
+F-statistic is a good indicator of whether there is a relationship between our predictor and the response variables. The further the F-statistic is from 1 the better it is. However, how much larger the F-statistic needs to be depends on both the number of data points and the number of predictors. Generally, when the number of data points is large, an F-statistic that is only a little bit larger than 1 is already sufficient to reject the null hypothesis (H0 : There is no relationship between y and x). The reverse is true as if the number of data points is small, a large F-statistic is required to be able to ascertain that there may be a relationship between predictor and response variables. In our example the F-statistic is 3.41 which is larger than 1 given the size of our data
+
+The F value is used to calculate the P value - whether or not the F value is significant or not depends on the degrees of freedom. Whether or not it is above or below 0.05 does not directly indicate significance.
+
+Here, the 𝑝 value -  0.06782021 is MORE than the alpha level 0.01, your results are NOT significant and  we  ACCEPT the null hypothesis, and the model is NOT FIT  which means change in x does not have effect on y.
+
+
+## problem 3d. Using just the first five observations from your simulated dataset, calculate by hand the coeﬀicient on x, its standard error, and the adjusted R2. Be sure to show your work, but you may use R for the simple math.
+
+```{r}
+set.seed(1)
+# create some simulated data
+# x is a random normal variable
+x <- rnorm(n = 100, mean = 0, sd = 1) 
+# epsilon is also a random normal error with mean 0 and sd 1
+e <- rnorm(n = 100, mean = 0, sd = 1) 
+# The final equation
+y <- 0.1 + 0.2 * x + e # vectorize
+```
+
+```{r}
+# The first 5 observations
+x <- x[1:5]
+y <- y[1:5]
+```
+
+```{r}
+summary(lm(y~x))
+```
+
+
+
+
+
+```{r}
+# mean and s.d of x
+x_mean <- mean(x)
+x_sd <- sd(x)
+# mean and s.d of y
+y_mean <- mean(y)
+# co-variance of x and y
+cov_xy <- cov(x,y)
+paste0("The is covariance of  x and y  is:", cov_xy)
+# variance of x
+var_x <-var(x)
+paste0("The is variance of  x is:", var_x)
+# coeff of x
+beta_1 <- cov_xy/var_x
+paste0("The is coeﬀicient on x is:", beta_1)
+```
+
+
+
+$$y = \beta_{0} + \beta_{1}x$$
+
+$$\beta_{1} = \frac{ \textrm{Cov}(x,y)}{\textrm{Var}(x)}   = \frac{ \sum_{i} (x_{i} - \bar{x})(y_{i} - \bar{y})}{\sum_{i} (x_{i} - \bar{x})^{2}}$$
+
+Thus, 
+
+$$\beta_{1}=\frac{0.5473}{0.9235}=0.59266$$
+
+$$\beta_{0} =  \bar{y} - \beta_{1} \bar{x}=(-0.271-0.129 * 0.592)= -0.347$$
+
+Best fit line equation can be given as:
+
+$$y = \beta_{0} + \beta_{1}x$$
+That is, 
+$$y = -0.347 +0.592x$$
+
+$$TSS = \sum_{i} (y_{i} - \bar{y})^{2}$$
+```{r}
+y<- y[1:5]
+mean_y <- mean(y)
+y_meany <- y-mean_y
+TSS <- sum((y_meany)^2)
+TSS
+```
+
+
+
+$$TSS= (-0.3743658)^2 + (0.4501362)^2 + (-0.7067557)^2 +  (0.8483766)^2 + (-0.2173914)^2 =  1.609$$
+
+
+So, now we compute SSE using the predicted y values.
+
+
+$$y = -0.347 +0.592* (-0.6264538) = -0.7178606$$
+$$y = -0.347 +0.592 * 0.1836433 =  -0.2382832$$
+$$y = -0.347 +0.592 * -0.8356286 =-0.8416918$$
+$$y = -0.347 +0.592 * 1.5952808 =  0.5974062$$
+$$y = -0.347 +0.592 * 0.329507 = -0.1519319$$
+
+
+```{r}
+y_pred <- c(-0.7178606, -0.2382832, -0.8416921, 0.5974062, -0.1519314)
+y <- y[1:5]
+y_y_pred <- y-y_pred 
+SSE<- sum((y_y_pred)^2)
+SSE
+```
+
+
+
+$$SSE = \sum_{i} (y_{i} - \hat{y}_{i})^{2}= 0.3116163$$
+
+Now, $$R^{2} = \frac{TSS - SSE}{TSS}= \frac{1.609 - 0.32}{1.609} = 0.8063$$
+
+```{r}
+r_sq <- (TSS - SSE)/ TSS
+r_sq
+```
+
+R-squared is the square of the correlation. It ranges from values (0,1) unlike correlation which ranges between (-1,+1) .
+The R-squared value of 0.806 indicates that 80.6% of the variation is captured by the model which is good.
+
+
+Adjusted R- square:
+
+
+$$adjusted R2= \frac{TSS/df_t-SSE/df_e} {TSS/df_t}$$
+
+
+
+
+$$df_t=n−1 = 4$$
+$$df_e=n−k−1 = 5-1-1= 3$$
+
+```{r}
+# Calculate adjusted R
+df_t <- 4
+df_e <- 3
+(TSS/df_t - SSE/df_e) / (TSS/df_t)
+```
+
+
+
+$$adjusted R2= \frac{TSS/df_t-SSE/df_e} {TSS/df_t} = 0.7418169$$
+
+Standard Error
+
+
+$${\beta_1} = se_{\hat{y}} \frac{1}{\sqrt{\sum (x_i - \bar{x})^2}}$$
+
+
+$$ se_{\hat{y}} = \sqrt{\frac{SSE}{n-2}}  = 0.33  $$
+
+```{r}
+x <- x[1:5]
+mean_x <- mean(x)
+x_meanx <- x-mean_x
+sum((x_meanx)^2)
+0.33 * 1/sqrt( 3.69)
+```
+
+
+
+
+
+$$ se_{\beta_1} = 0.33 *\frac{1}{\sqrt{3.69}}  =  0.17  $$
+
+
+## probelm 4: Now generate 𝑦 = 0.1 + 0.2 ∗ 𝑥 − 0.5 ∗ 𝑥2 + 𝜖 with 100 observations(10pts)
+
+```{r}
+set.seed(1)
+# create some simulated data
+# x is a random normal variable
+x <- rnorm(n = 100, mean = 0, sd = 1) 
+# epsilon is also a random normal error with mean 0 and sd 1
+e <- rnorm(n = 100, mean = 0, sd = 1) 
+# The final equation
+y <- 0.1 + 0.2 * x - 0.5* x^2 + e # vectorize
+```
+
+
+### probelm 4a : Regress y on x and 𝑥2 and report the results. If x or 𝑥2 are not statistically significant, suggest why
+
+```{r}
+set.seed(1)
+# Regress y on x and x^2 
+y_on_x2 <- lm(y ~ x + I(x^2))
+# Report the results
+summary(y_on_x2)
+```
+
+Both x and x^2 are significant because the p value is less than 0.05 i.e,  0.0471  and 7.93e-11
+
+x^2 is really significant because the p value is 7.93e-11
+ 
+The Pr(>t) acronym found in the model output relates to the probability of observing any value equal or larger than t. A small p-value indicates that it is unlikely we will observe a relationship between the predictor and response variables due to chance. Typically, a p-value of 5% or less is a good cut-off point. In our model example, the p-values are close to 0.01. Note the ‘signif. Codes’ associated to each estimate. The one star (or asterisks) represent significant p-value. Consequently, a small p-value for the intercept and the slope indicates that we can reject the null hypothesis which allows us to conclude that there is a relationship between Y and x and Y and x^2
+
+
+
+#### probelm 4 b: Based on the known coeﬀicients that we used to create y, what is the exact effect on y of increasing x by 1 unit from 1 to 2?
+
+
+```{r}
+y <- 0.1 + 0.2 * x - 0.5* x^2  # main equation
+y1 <- 0.1 + 0.2 * 1 - 0.5* 1^2  # y when x is 1
+y2 <- 0.1 + 0.2 * 2 - 0.5* 2^2  # y when x is 2
+y2-y1
+# Therefore, increasing x by 1 unit from 1 to 2 results in decrease in value of y by -1.3
+# Negative relationship
+```
+
+#### probelm 4c : Based on the coeﬀicients estimated from 4(a), what is the effect on y of changing x from -0.5 to -0.7?
+
+
+```{r}
+y <-  0.15672 + 0.21716 * x -0.61892* x^2  # main equation by coeﬀicients estimated from 4(a)
+y1 <-  0.15672 + 0.21716 * (-0.5) -0.61892 * ((-0.5))^2 # y when x is -0.5
+y2 <-  0.15672 + 0.21716 * (-0.7) -0.61892 * ((-0.7))^2 # y when x is -0.7
+y2-y1
+# Therefore, decreasing x by from -0.5 to -0.7 results in decrease in value of y by -0.19
+```
+
+
+
+#### Problem 5 : now generate 𝑥2 as a random normal variable with a mean of -1 and an sd of 1. create a new dataset where 𝑦 = 0.1 + 0.2 ∗ 𝑥 − 0.5 ∗ 𝑥 ∗ 𝑥2 + 𝜖 and answer the following items. (20 pts)
+
+```{r}
+set.seed(1)
+# create some simulated data
+# x is a random normal variable
+x <- rnorm(n = 100, mean = 0, sd = 1) 
+# 𝑥2 as a random normal variable with a mean of -1 and an sd of 1
+x2 <- rnorm(n = 100, mean = -1, sd = 1)
+# epsilon is also a random normal error with mean 0 and sd 1
+e <- rnorm(n = 100, mean = 0, sd = 1) 
+# The final equation
+y <- 0.1 + 0.2 * x - 0.5* x *x2 + e # vectorize
+```
+
+
+
+
+#### Problem 5a: Based on the known coeﬀicients, what is the exact effect of increasing x2 from 0 to 1 with x held at its mean?
+
+```{r}
+x_mean <- mean(x)
+y1 <- 0.1 + 0.2 * x_mean - 0.5* x_mean *0 + e # when x2 is 0
+y2 <- 0.1 + 0.2 * x_mean - 0.5* x_mean *1 + e # when x2 is 1
+y2[1] - y1[1]
+# Therefore, increasing x2 by from 0 to 1,
+# while keeping x at its mean results in decrease in value of y by -0.054
+```
+
+#### Problem 5b : Regress y on x, 𝑥2, and their interaction. Based on the regression-estimated coeﬀicients, what is the effect on y of shifting x from -0.5 to -0.7 with 𝑥2 held at 1?
+
+```{r}
+set.seed(1)
+# Regress y on x and x^2 
+y_on_xx2 <- lm(y ~ x + x2 + x * x2)
+# Report the results
+summary(y_on_xx2)
+```
+
+
+```{r}
+# The final equation
+y <- 0.102 -0.073 * x - 0.739 * x *x2 # vectorize
+#The effect on y of shifting x from -0.5 to -0.7 with 𝑥2 held at 1?
+y1 <- 0.102 -0.073 * (-0.5) - 0.739 * (-0.5) *1  # when x2 is 1, x is -0.5 
+y2 <- 0.102 -0.073 * (-0.7) - 0.739 * (-0.7) *1  # when x2 is 1, x is -0.7
+y2[1] - y1[1]
+# Therefore, decreasing x by from -0.5 to -0.7,
+# while keeping x2 constant 1 results in increase in value of y by  0.1624
+```
+
+
+#### Problem 5c :Regress y on x alone. Using the R2 from this regression and the R2 from 5(b), perform by hand an F test of the complete model (5b) against the reduced, bivariate model. What does this test tell you?
+
+
+```{r}
+set.seed(1)
+# create some simulated data
+# x is a random normal variable
+x <- rnorm(n = 100, mean = 0, sd = 1) 
+# 𝑥2 as a random normal variable with a mean of -1 and an sd of 1
+x2 <- rnorm(n = 100, mean = -1, sd = 1)
+# epsilon is also a random normal error with mean 0 and sd 1
+e <- rnorm(n = 100, mean = 0, sd = 1) 
+# The final equation
+y <- 0.1 + 0.2 * x - 0.5* x *x2 + e # vectorize
+```
+
+
+```{r}
+# Regress y on x alone
+set.seed(1)
+# Regress y on x 
+y_only_x <- lm(y ~ x)
+# Report the results
+summary(y_only_x)
+```
+
+
+$$ F = \frac{(R^2_c -R^2_r)/df_1}{(1-R^2_c)/df2} =  \frac{(0.4476 - 0.2993)/2} {1-0.4476/100-3-1}= 12.89$$
+
+
+
+```{r}
+# p-value 
+pf(12.89,3-1,(100-3-1), lower.tail = F)  
+```
+
+
+There is a significant difference since the p-value is less than 0.05. We have enough evidence to reject the null hypothesis and conclude that
+complelete model is better than reduced, bivariate model and has significant difference between both the models
+
+
+
+#### Problem 6 :Generate a dataset with 300 observations and three variables: f, x1, and x2. f should be a factor with three levels, where level 1 corresponds to observations 1-100, level 2 to 101-200, and level 3 to 201-300. (Eg, f can be “a” for the first 100 observations, “b” for the second 100, and “c” for the third 100.) Create x1 such that the first 100 observations have a mean of 1 and sd of 2; the second 100 have a mean of0 and sd of 1; andt he third 100 have a mean of 1 and sd of 0.5. Create x2 such that the first 100 observations have a mean of 1 and sd of 2; the second 100 have a mean of 1 and sd of 1; and the third 100 have a mean of 0 and sd of 0.5. (Hint: It is probably easiest to create three 100-observation datasets first, and then stack them with rbind(). And make sure to convert f to a factor before proceeding.) (20pts)
+
+```{r}
+# three variables: f, x1, and x2
+# f should be a factor with three levels, 
+# where level 1 corresponds to observations 1-100, 
+# level 2 to 101-200, and level 3 to 201-300. 
+# (Eg, f can be “a” for the first 100 observations,
+# “b” for the second 100, and “c” for the third 100.)
+f <- as.factor(c(rep("a",100),rep("b",100),rep("c",100)))
+# Create x1 such that the first 100 observations have a mean of 1 and sd of 2;
+# The second 100 have a mean of0 and sd of 1
+# The third 100 have a mean of 1 and sd of 0.5
+x1 <- c(rnorm(100, 1, 2), rnorm(100, 0, 1), rnorm(100, 1, 0.5))
+# Create x2 such that the first 100 observations have a mean of 1 and sd of 2;
+# The second 100 have a mean of 1 and sd of 1;
+# and the third 100 have a mean of 0 and sd of 0.5. 
+x2 <- c(rnorm(100, 1, 2), rnorm(100, 1, 1), rnorm(100, 0, 0.5))
+```
+
+
+```{r}
+# create three 100-observation datasets first, and then stack them with rbind()
+df_3var <- data.frame(cbind(x1,x2,f))
+head(df_3var, 3)
+```
+
+
+##### Problem 6a : Using the k-means algorithm, perform a cluster analysis of these data using a k of 3 (use only x1 and x2 in your calculations; use f only to verify your results). Comparing your clusters with f, how many datapoints are correctly classified into the correct cluster? How similar are the centroids from your analysis to the true centers?
+```{r}
+# The k-means algorithm, perform a cluster analysis of these data using a k of 3
+# use only x1 and x2 in your calculations
+subset_dfvar <- df_3var[,1:2]
+kmean_x1x2<- kmeans(subset_dfvar, centers=3, nstart=25)
+```
+
+
+```{r}
+#  checking the centers 
+kmean_x1x2$centers
+```
+
+
+```{r}
+# cluster
+df_3var$cluster <- as.vector(kmean_x1x2$cluster)
+```
+
+
+```{r}
+# f only to verify your results
+df_3var$f <- f
+table(df_3var[c("f","cluster")])
+```
+
+
+```{r}
+centroids<-aggregate(df_3var[,1:2], by=list(cat=df_3var$f), FUN = mean)
+print(centroids) # checking the centroids
+# accuracy 
+accuracy <- (41+60+90)/300
+paste0("The Model shows an accuracy of :", percent(accuracy, accuracy = 1))
+```
+
+##### Comparing your clusters with f, how many datapoints are correctly classified into the correct cluster? 
+
+There are a total of 300 data points:  
+191 data points are correctly classified :
+      1. 41 correctly classifications for factor a, 
+      2. 60 correct classifications for factor b, 
+      3. and 90 correctly classifications for factor c
+
+109  datapoints are in-correctly classified 
+
+##### How similar are the centroids from your analysis to the true centers ?
+Also, The centroids of the first two clusters and the real centers from cluster f are very different from one another. For the third cluster, where the x1 and x2 values were comparable to those for cluster f, we discovered a similar trend. For f, the values are x1=1.015 and x2=-0.022; for our study, they are x1=1.426 and x2=-0.079.
+
+
+
+##### Problem 6b :Perform a factor analysis of this data using your preferred function. Using a scree plot and/or cumulative variance plot, how many factors do you think you should include? Speculate about how these results relate to those you got with the cluster analysis.
+
+
+
+
+```{r}
+# three variables: f, x1, and x2
+# f should be a factor with three levels,
+# where level 1 corresponds to observations 1-100, 
+# level 2 to 101-200, and level 3 to 201-300. 
+# (Eg, f can be “a” for the first 100 observations,
+# “b” for the second 100, and “c” for the third 100.)
+f <- as.factor(c(rep("a",100),rep("b",100),rep("c",100)))
+# Create x1 such that the first 100 observations have a mean of 1 and sd of 2;
+# The second 100 have a mean of0 and sd of 1
+# The third 100 have a mean of 1 and sd of 0.5
+x1 <- c(rnorm(100, 1, 2), rnorm(100, 0, 1), rnorm(100, 1, 0.5))
+# Create x2 such that the first 100 observations have a mean of 1 and sd of 2;
+# The second 100 have a mean of 1 and sd of 1;
+# and the third 100 have a mean of 0 and sd of 0.5. 
+x2 <- c(rnorm(100, 1, 2), rnorm(100, 1, 1), rnorm(100, 0, 0.5))
+```
+
+```{r}
+df_var <- data.frame(cbind(x1,x2,f))
+pca1<-prcomp(df_var)
+screeplot(pca1, col= "light blue")
+```
+
+
+```{r}
+summary(pca1)
+```
+
+
+```{r}
+pca_var<-pca1$sdev^2
+plot(pca_var, type = "b", col="blue")
+plot(cumsum(pca_var)/sum(pca_var),type = "b", 
+     xlim =c(0,3), ylim=c(0,4), col="blue")
+```
+
+
+Therefore, I Speculate that only 3 factors should be included with the cluster analysis
+
+About 57% of the data is made up of the first principal component, and 43% of the data of the second. We should include x1 and x2 because they are equivalent and neither one dominates the other. Additionally, it is consistent with how we generated the data as x1 and x2 are supposed to be unrelated.
+
+
+
+#####################################
+
+##### For the next questions use the Modified Massachussets Crimes dataset of 2019 available on the final canvas page (“mass_crimes_final.csv”). Modifying the dataframe object in R to perform your analysis correctly might be a part of the evaluation
+```{r}
+# loading the dataset
+df <-read.csv("/Users/sanjanagorlla/Desktop/massachussets_crime_final.csv", 
+              header = TRUE, stringsAsFactors = FALSE)
+```
+
+##### Exploring the dataset
+
+```{r}
+dim(df)
+# The Modified Massachussets Crimes dataset
+# of 2019 has 281 obseravtions with only 12 columns
+```
+
+
+```{r}
+head(df, 6) # to print out the first 6 rows of every column in the dataset
+```
+
+```{r}
+colnames(df) # To print out every column name.
+```
+
+
+```{r}
+# summary statistics on the numeric columns of the dataset
+summary(df)
+```
+There are NA values in the dataset
+
+```{r}
+# structure of the dataset
+str(df)
+# this shows that we have to change the type of few variables 
+```
+
+
+```{r}
+#skimming the dataset
+skim(df)
+```
+
+# data pre-processing 
+1. NA values
+```{r}
+# checking the NA's
+sapply(df, function(x) sum(is.na(x)))
+# Remove NAs from the data.
+clean_df <- na.omit(df)
+```
+
+```{r}
+sapply(clean_df, function(x) sum(is.na(x)))
+```
+
+
+Here, I have obsereved  zero values in few columns. Hence, removing them for further analysis
+```{r}
+df_no_zero <- filter_if(clean_df, is.numeric, all_vars((.) != 0))
+dim(clean_df)
+dim(df_no_zero)
+```
+
+
+
+Here, I have obsereved many numeric columns are represented as charecter. It would be difficult to work with them. Hence, converting them to numeric. if we use as.numeric() warning message  “NAs introduced by coercion” would occur. This is because, some of the input values are not formatted properly, because they contain commas (i.e. ,) between the numbers. We can remove these commas by using the gsub function:
+
+```{r}
+clean_df$Population <- as.integer(gsub(",", "", clean_df$Population)) 
+clean_df$Violent.crime <- as.integer(gsub(",", "", clean_df$Violent.crime)) 
+clean_df$Robbery <- as.integer(gsub(",", "", clean_df$Robbery)) 
+clean_df$Aggravated.assault <- as.integer(gsub(",", "",
+                                               clean_df$Aggravated.assault)) 
+clean_df$Property.crime <- as.integer(gsub(",", "", clean_df$Property.crime)) 
+clean_df$Burglary <- as.integer(gsub(",", "", clean_df$Burglary)) 
+clean_df$Larceny..theft<- as.integer(gsub(",", "", clean_df$Larceny..theft)) 
+```
+
+```{r}
+# changing the column names to maintain consistency with the column names
+colnames(clean_df)[colnames(clean_df) == "Violent.crime"] <- "Violent_crime"
+colnames(clean_df)[colnames(clean_df) == "Murder_MANSLAUGHTER"] <- "Murder_manslaughter"
+colnames(clean_df)[colnames(clean_df) == "Aggravated.assault"] <- "Aggravated_assault"
+colnames(clean_df)[colnames(clean_df) == "Property.crime"] <- "Property_crime"
+colnames(clean_df)[colnames(clean_df) == "Larceny..theft"] <- "Larceny_theft"
+```
+
+
+```{r}
+# inspecting data structure
+glimpse(clean_df)
+```
+
+```{r}
+# Final check for missing value
+anyNA(clean_df)
+```
+
+
+
+```{r}
+### checking the distribution
+summary(clean_df)
+```
+
+
+
+```{r}
+# check for outliers in the dataset
+hist(clean_df$Population, main = "Histogram")
+```
+
+
+```{r}
+boxplot(clean_df[,-1], main = "Boxplot")
+```
+
+
+```{r}
+df.cols <- names(clean_df[,-1])
+data.boxplot <- melt(clean_df[,-1], measure.vars=df.cols)
+
+ggplot(data.boxplot)+
+  geom_boxplot(aes(x =variable, y= value, color = variable))+
+  labs(title = "Box plot to show outliers", caption = "crime Data")+
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+  scale_y_log10()
+```
+There are few outliers but these doesnot effect the analysis. Hence not removing the outliers 
+
+
+
+
+
+#### Population 
+```{r}
+# city with highest population
+filter(clean_df, Population == max(Population))
+# city with least population
+filter(clean_df, Population == min(Population))
+```
+
+```{r}
+# which city is the biggest:
+clean_df$City[which.max(clean_df$Population)]
+# How many people:
+max(clean_df$Population)
+```
+
+
+     
+###### Building the correlation matrix
+
+```{r}
+data_num <- clean_df %>% 
+                             select_if(is.numeric)
+
+ggcorr(data_num, 
+       label = T, 
+       label_size = 2,
+       label_round = 2,
+       hjust = 1,
+       size = 3, 
+       color = "black",
+       layout.exp = 5,
+       low = "blue", 
+       mid = "gray95", 
+       high = "orange",
+       name = "Correlation")
+```
+
+
+The Population as dependent variable has somewhat strong positive correlation with Property_crime, Larceny_theft, Violent_crime, Aggravated_assault, Burglary, Motor_vehicle_theft.
+
+And this is a valid finding, because high Population leads to crimes like Property_crime, Larceny_theft, Violent_crime, Aggravated_assault, Burglary, Motor_vehicle_theft.
+
+And based on the Corr Matrix, we can see there is very strong correlation between them. This strong correlation indicates multicollinearity among them.
+
+ 
+```{r}
+M <- cor(clean_df[,2:12])
+corrplot(M,method = "circle")
+corrplot(M,method = "number")
+```
+
+```{r}
+corrmatrix = cor(clean_df[,-1])
+kable(t(corrmatrix))
+```
+
+
+```{r}
+corrplot (cor(clean_df[,-1]),
+          method="ellipse", 
+          bg = " light blue", type = "upper", 
+          title= " correlation for the variables in crime dataset",
+          diag = F,
+          outline = T, 
+          insig = "pch",
+          pch= 3)
+```
+
+```{r}
+pairs.panels(cor(clean_df[,-1]))
+```
+
+```{r}
+ggplot(clean_df, aes(clean_df$Population))+ geom_histogram(color="black", 
+                                                           fill="light blue")+
+  labs(title = "Distribution of population", x= "population", y= "count", 
+       caption = "Crime dataset")+
+  theme_bw()
+```
+
+```{r}
+df.cols_no <- names(clean_df[,-1])
+data.boxplot_no <- melt(clean_df[,-1], measure.vars=df.cols_no)
+
+ggplot(data.boxplot_no)+
+  geom_boxplot(aes(x =variable, y= value, color = variable))+
+  labs(title = "Box plot to show outliers", caption = "crime Data")+
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+  scale_y_log10()
+```
+
+
+
+
+##### 7. Raise some hypothesis about the dataset, motivate it, filter the rows and columns (if needed), so that it can be tested using multiple regression. State all steps clearly and document your conclusions. (5pts).
+
+*#### First hypothesis : I hypothize  that there might be an effect on population with the crimes like Property_crime, Robbery, Burglary, Violent_crime. And these types of crime might be prevalent in the cities with high population*
+
+Therefore, filtering the 50 cities with highest population
+
+```{r}
+# rearranging the dataset in descending order to filter
+# top 50 cities with the highest population 
+filter_df<- clean_df %>%
+  arrange(desc(Population))
+# Top  cities with highest population
+new_filter <- head(filter_df, 50)
+```
+
+```{r}
+# deslecting city
+# Now, In Total, there are 12 Variables, 
+# 11 of them are Numerical, and 1 of them are chr.
+# We will need to deselect some variables:
+# Also, Murder_manslaughter has zero values, Theferore, not including them in further analysis
+final_data <- new_filter %>% 
+  dplyr::select(-c(City, Murder_manslaughter)) 
+```
+
+```{r}
+Model_1 <- lm(Population ~ Property_crime +Robbery +Burglary + 
+                Violent_crime, data = final_data)
+summary(Model_1)
+```
+
+```{r}
+summary(Model_1)$adj.r.squared
+```
+
+The model_1 has the 0.7828767 value of Adjusted R-Squared
+The Model_1 has the largest parameter estimate that is property_crime  which is 12.53.
+The property_crime will affect the Population the most in a positive direction.
+The p-value of property_crime is much lower than 0.05, thus indicating they are very significant predictors for Population.
+This model has R-squared value 0.7828767, which indicates the Model can describe its predictors condition by 74%.
+Hence we can conclude that Robbery + Burglary + Violent_crime are not significant in the multiple regression model. As these variables is not significant, it is possible to remove it from the model
+
+
+*#### second  hypothesis : I hypothize that the criminals who commit Robbery, Larceny_theft and violent crime, might also commit burglary. Therefore, burgulary can be predicted by the number of Robbery, Larceny_theft crimes and voilent_crime* 
+
+
+```{r}
+Model_2 <- summary(lm(Burglary~ Robbery  + Larceny_theft+ Violent_crime,  data = final_data))
+Model_2
+```
+
+The model_2 has the 0.9035 value of Adjusted R-Squared
+The Model_2 has the largest parameter estimate that is Violent_crime which is 0.34865.
+The Violent_crime, Robbery and   Larceny_theft will affect the Burglary the most in a positive direction.
+The p-value of  Larceny_theft  and  Violent_crime is much lower than 0.05, thus indicating they are very significant predictors for Burglary.
+This model has R-squared value 0.9094, which indicates the Model can describe its predictors condition by 90%.
+Hence we can conclude that robbery is not significant in the multiple regression model.As this variable is not significant, it is possible to remove it from the model
+
+```{r}
+Model_3 <- summary(lm(Burglary~ Larceny_theft+ Violent_crime,  data = final_data))
+Model_3
+```
+
+After removing the robbery the model seems to be improved and Larceny_theft and Violent_crime have significant effect on burglary
+
+
+*#### Third  hypothesis : I hypothezie if double the voilent crime rate does the burglary is effected* 
+
+```{r}
+Model_3 <- summary(lm(Burglary~ I(Violent_crime^2) + Larceny_theft, data = final_data))
+Model_3
+```
+
+
+
+```{r}
+regs <- regsubsets(Burglary~., data = final_data, nbest=10)
+plot(regs, 
+     scale="adjr", 
+     main="All possible regression: ranked by Adjusted R-squared")
+```
+Based on given Plot, we can determine the most significant Variables based on Largest Adj. R-Squared: By adjusted \( R^2 \), the best model includes "Violent_crime","Rape","Robbery","Aggravated_assault","Property_crime"    (variables that have black boxes at the higest Y-axis value).
+
+
+
+##### 8. Perform a WRONG regression using the dataset. A wrong regression is one that uses either inappropriate variables or other substantial errors, but that still results in a table and coeﬀicients. Explain the results obtained and why they’re not a proper application of the methods we learnt this semester? (5pts)
+
+
+A wrong regression is when we chose two variables are highly correlated, they are basically measuring the same phenomenon. When one enters into the regression equation, it tends to explain same thing
+
+checking the corr plot again to select the variables that are highly correlated
+```{r}
+data_num <- clean_df %>% 
+                             select_if(is.numeric)
+
+ggcorr(data_num, 
+       label = T, 
+       label_size = 2,
+       label_round = 2,
+       hjust = 1,
+       size = 3, 
+       color = "black",
+       layout.exp = 5,
+       low = "blue", 
+       mid = "gray95", 
+       high = "orange",
+       name = "Correlation")
+```
+
+we can see property_crime is highly correlated with larency_theft is 0.99 
+burglary 0.95 and motor_vehicle theft 0.94
+
+```{r}
+Model_4 <- summary(lm(Property_crime ~  Motor_vehicle_theft + Burglary +
+                        Larceny_theft, data = final_data))
+Model_4
+```
+
+
+There is a warning that the summary may be unreliable due to the essentially perfect fit.
+
+This means we have overfitted model with only 3 perfectly fit-able data points.
+
+Multicollinearity happens when independent variables in the regression model are highly correlated to each other. It makes it hard to interpret of model and also creates an overfitting problem. 
+
+it is recommended to avoid having correlated features in your dataset. Indeed, a group of highly correlated features will not bring additional information (or just very few), but will increase the complexity of the algorithm, thus increasing the risk of errors.
+
+```{r}
+Model_5<- summary(lm(Population~ .,
+                data = clean_df))
+```
+
+
+Including the city in the multi regression is also wrong is a blunder mistake. Before using a chararecter varaible we need to factorize it.
+city cannot be factorize 
+
+
+##### 9. Perform either PCA or Clustering on the dataset. Present your results and conclusions into one or more paragraphs. (10pts)
+
+```{r}
+new_df <- clean_df[,-1]
+# removing zeroes before pca
+row_sub = apply(new_df, 1, function(row) all(row !=0 ))
+##Subset as usual
+new_df_wozero <- new_df[row_sub,]
+```
+
+
+
+```{r fig.align = 'center'}
+# Factor eigenvalues or variances 
+# (or the sdev or standard deviations as reported by prcomp or princomp)
+pcaA<- prcomp(new_df_wozero) #prcomp()
+pcaA1 <- pcaA$rotation[,1]
+# Extracting standard deviations
+pcaA_stdev <- pcaA$sdev 
+# Squaring to get variances
+pcaA_stdev_squared<- pcaA_stdev^2 
+pcaA1 <- pcaA$rotation[,1]
+# Extracting standard deviations
+pcaA_stdev <- pcaA$sdev 
+# Squaring to get variances
+pcaA_stdev_squared<- pcaA_stdev^2
+#Plot these in a scree plot and use the “elbow” test to guess how many factors one should retain
+plot(pcaA_stdev_squared)
+```
+The common criteria used for choosing the number of factors is based on an examination of these values. First, we look for the “elbow” in the curve – where it goes from the steep decline, then the flat area, where the presumption is the flat are is all the
+factors that are just noise.
+
+In the scree plot, from the 2nd number, the line becomes flat. So we would include 2 factors and the rest is noise
+
+##### 10. Repeat the procedure chosen on question 8 but now transform the data to a new dataframe so that population is taken into account (normally crime data is presented in X offenses by 100.000 habitants). Show your results and compare them to the ones of question 9 with another paragraph (10pts Bonus)
+
+```{r fig.align = 'center'}
+new_df_wozero$Population <- new_df_wozero$Population/100
+summary(lm(Property_crime ~  Population + Motor_vehicle_theft 
+           + Burglary + Larceny_theft, data = new_df_wozero))
+```
+
+Population is noted to be less significant
+
+```{r}
+new_df_wozero$Population <- new_df_wozero$Population/10000
+new_df_wozero$Motor_vehicle_theft <- new_df_wozero$Motor_vehicle_theft /10000
+new_df_wozero$Burglary <-new_df_wozero$Burglary/10000
+new_df_wozero$Larceny_theft <- new_df_wozero$Larceny_theft/10000
+summary(lm(Property_crime ~  Population + Motor_vehicle_theft 
+           + Burglary + Larceny_theft, data = new_df_wozero))
+```
+
+
+
+
+```{r fig.align = 'center'}
+# Factor eigenvalues or variances 
+# (or the sdev or standard deviations as reported by prcomp or princomp)
+pcaA<- prcomp(new_df_wozero) #prcomp()
+pcaA1 <- pcaA$rotation[,1]
+# Extracting standard deviations
+pcaA_stdev <- pcaA$sdev 
+# Squaring to get variances
+pcaA_stdev_squared<- pcaA_stdev^2 
+pcaA1 <- pcaA$rotation[,1]
+# Extracting standard deviations
+pcaA_stdev <- pcaA$sdev 
+# Squaring to get variances
+pcaA_stdev_squared<- pcaA_stdev^2
+#Plot these in a scree plot and use the “elbow” test to guess how many factors one should retain
+plot(pcaA_stdev_squared)
+```
+
+There is no difference in 8th and 9th questions even after taking population into account
+
